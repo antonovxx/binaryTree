@@ -59,6 +59,8 @@ public:
         return sum(Root);
     }
     
+    double avg();
+    
 private:
     void insert(int Data, Element* Root)
     {
@@ -112,16 +114,17 @@ private:
     
     int sum(Element* Root)const
     {
-        int left, right;
-        if(Root != nullptr)
+        if (Root == nullptr)
         {
-            left = (Root != nullptr) ? sum(Root -> pLeft) : 0;
-            right = (Root != nullptr) ? sum(Root -> pRight) : 0;
-            return left + right + Root -> Data;
+            return 0;
         }
-        return 0;
+        return sum(Root->pLeft) + sum(Root->pRight) + Root -> Data;
     }
-
+    double avg()
+    {
+        return sum(Root) / size(Root);
+    }
+    
     void print(Element* Root)const
     {
         if (Root == nullptr) return;
