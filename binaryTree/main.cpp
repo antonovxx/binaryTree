@@ -3,6 +3,7 @@ using namespace std;
 
 class Tree
 {
+protected:
     class Element
     {
         int Data;
@@ -17,7 +18,12 @@ class Tree
         {
             //cout << "EDestructor:\t" << this << endl;
         }
+        bool isLeaf()const
+        {
+            return pLeft == pRight;
+        }
         friend class Tree;
+        friend class UniqueTree;
     }*Root;
 public:
     Element* getRoot()const
@@ -29,14 +35,36 @@ public:
         this->Root = nullptr;
         //cout << "TConstructor:\t" << this << endl;
     }
+    Tree(const std::initializer_list<int>& il) : Tree()
+    {
+        for(int const* it = il.begin(); it != il.end(); it ++)
+        {
+            insert(*it, Root);
+        }
+    }
+    Tree(const Tree& other) : Tree()
+    {
+        copy(other.Root);
+        //cout << "CopyConstructor: \t" << this << endl;
+    }
     ~Tree()
     {
+        clear();
         //cout << "TDestructor:\t" << this << endl;
     }
 
     void insert(int Data)
     {
         insert(Data, Root);
+    }
+    void erase(int Data)
+    {
+        erase(Data, Root);
+    }
+    void clear()
+    {
+        clear(Root);
+        Root = nullptr;
     }
     int minValue()const
     {
@@ -49,17 +77,21 @@ public:
     void print()
     {
         print(Root);
+        cout << endl;
     }
     int size()const
     {
         return size(Root);
     }
-    int sum(Element* Root)const
+    int sum()const
     {
         return sum(Root);
     }
     
-    double avg();
+    double avg()
+    {
+        return (double)sum(Root)/size(Root);
+    }
     
 private:
     void insert(int Data, Element* Root)
@@ -81,6 +113,52 @@ private:
             if (Root->pRight == nullptr)Root->pRight = new Element(Data);
             else insert(Data, Root->pRight);
         }
+    }
+    void erase (int Data, Element*& Root)
+    {
+        if (Root == nullptr)
+            return;
+        erase(Data, Root ->pLeft);
+        erase(Data, Root ->pRight);
+        
+        if (Data == Root -> Data)
+        {
+            if(Root -> isLeaf())
+            {
+                delete Root;
+                Root = nullptr;
+            }
+            else
+            {
+                if(size(Root -> pLeft) > size(Root ->pRight))
+                {
+                    Root -> Data = maxValue(Root ->pLeft);
+                    erase(maxValue(Root ->pLeft), Root -> pLeft);
+                }
+                else
+                {
+                    Root ->Data = minValue(Root -> pRight);
+                    erase(minValue(Root -> pRight), Root -> pRight);
+                }
+            }
+        }
+    }
+    void clear(Element*& Root)
+    {
+        if(Root == nullptr)
+            return;
+        clear(Root -> pLeft); // удаляется вся левая ветка с минимального значения
+        clear(Root -> pRight); // удаляется вся правая ветка с максимального значения
+        delete Root;
+        Root = nullptr;
+    }
+    void copy(Element* Root)
+    {
+        if (Root == nullptr)
+            return;
+        insert(Root -> Data, this -> Root);
+        copy(Root -> pLeft);
+        copy(Root -> pRight);
     }
     
     int minValue(Element* Root)const
@@ -119,12 +197,9 @@ private:
             return 0;
         }
         return sum(Root->pLeft) + sum(Root->pRight) + Root -> Data;
+        //return !Root ? 0 : sum(Root->pLeft) + sum(Root->pRight) + Root -> Data;
     }
-    double avg()
-    {
-        return sum(Root) / size(Root);
-    }
-    
+       
     void print(Element* Root)const
     {
         if (Root == nullptr) return;
@@ -132,16 +207,47 @@ private:
         cout << Root->Data << "\t";
         print(Root->pRight);
     }
-    
 };
 
+class UniqueTree: public Tree
+{
+    void insert(int Data, Element* Root)
+    {
+        if (this->Root == nullptr)
+        {
+            this->Root = new Element(Data);
+            return;
+        }
+        
+        if (Root == nullptr)return;
+        if (Data < Root->Data)
+        {
+            if (Root->pLeft == nullptr)Root->pLeft = new Element(Data);
+            else insert(Data, Root->pLeft);
+        }
+        else if (Data > Root -> Data)
+        {
+            if (Root->pRight == nullptr)Root->pRight = new Element(Data);
+            else insert(Data, Root->pRight);
+        }
+    }
+    
+public:
+    void insert(int Data)
+    {
+        insert(Data, this -> Root);
+    }
+};
+
+//#define BASE_CHECK
 
 int main()
 {
+#ifdef BASE_CHECK
     int n;
     cout << "Enter size of the tree: "; cin >> n;
     
-    Tree tree;
+    UniqueTree tree;
     for (int i = 0; i < n; i++)
     {
         tree.insert(rand() % 100);
@@ -153,11 +259,19 @@ int main()
     cout << "Max value in the tree: " << tree.maxValue() << endl;
     cout << "Size of the tree: " << tree.size() << endl;
     cout << "Sum of elements: " << tree.sum() << endl;
+    cout << "Average: " << tree.avg() << endl;
+#endif // BASE_CHECK
     
+    Tree tree = {50, 25, 75, 16, 32, 64, 80};
+    tree.print();
+    
+    Tree tree2 = tree;
+    tree2.print();
+    
+    int value;
+    cout << "Enter erased variable: "; cin >> value;
+    tree.erase(value);
+    tree.print();
     
     return 0;
-    
-    
-    
-    
 }
